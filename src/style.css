@@ -1,0 +1,248 @@
+body {
+    background-color: hsl(0, 0%, 100%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    font-family: 'Courier New', monospace;
+}
+
+.container {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+}
+
+.keyboard {
+    display: flex;
+    gap: 10px;
+    padding: 20px;
+}
+
+.key {
+    width: 90px;
+    height: 90px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.1s;
+    position: relative;
+    /* Add this */
+}
+
+.key img {
+    width: 90px;
+    height: 90px;
+    object-fit: contain;
+}
+
+.key-label {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 25px;
+    font-weight: bold;
+    color: #000000;
+    pointer-events: none;
+    /* This makes the label not interfere with clicks */
+}
+
+.key.pressed {
+    transform: scale(0.85);
+    /* box-shadow: 0 0 5px rgba(0, 0, 0, 0.5); */
+}
+
+.operation-module {
+    display: flex;
+    gap: 50px;
+    flex-direction: column;
+    align-items: center;
+}
+
+.status-module {
+    width: 400px;
+    align-items: center;
+    height: 20px;
+    justify-items: center;
+    background-color: #000;
+    border: 1px solid #333;
+    border-radius: 10px;
+    color: white;
+    box-shadow:
+        inset 0 0 20px rgba(0, 47, 255, 0.3),
+        0 0 10px rgba(0, 47, 255, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.oscilloscope {
+    width: 800px;
+    height: 600px;
+    background-color: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 10px;
+    box-shadow:
+        inset 0 0 20px rgba(0, 47, 255, 0.3),
+        0 0 10px rgba(0, 47, 255, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.oscilloscope-combined {
+    width: 400px;
+    height: 200px;
+    background-color: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 10px;
+    background-color: #000;
+    background-image:
+        linear-gradient(rgba(0, 208, 255, 0.1) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 255, 213, 0.1) 1px, transparent 1px);
+    background-size: 40px 40px;
+    box-shadow:
+        inset 0 0 20px rgba(0, 47, 255, 0.3),
+        0 0 10px rgba(0, 47, 255, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+/* .screen {
+    width: 100%;
+    height: 100%;
+    background-color: #000;
+    background-image: 
+        linear-gradient(rgba(0, 208, 255, 0.1) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 255, 213, 0.1) 1px, transparent 1px);
+    background-size: 40px 40px;
+    position: relative;
+} */
+
+.axis {
+    position: absolute;
+    background-color: rgba(0, 47, 255, 0.3);
+}
+
+.x-axis {
+    width: 100%;
+    height: 1px;
+    top: 50%;
+}
+
+.y-axis {
+    width: 1px;
+    height: 100%;
+    left: 50%;
+}
+
+.measurement {
+    position: absolute;
+    color: #00ff48;
+    font-size: 12px;
+}
+
+.x-measurement {
+    bottom: 5px;
+}
+
+.y-measurement {
+    right: 5px;
+}
+
+.glow {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    box-shadow: inset 0 0 50px rgba(0, 242, 255, 0.5);
+    pointer-events: none;
+}
+
+.scanline {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to bottom,
+            rgba(255, 255, 255, 0),
+            rgba(0, 225, 255, 0.1) 50%,
+            rgba(255, 255, 255, 0));
+    animation: scanline 5s linear infinite;
+    position: absolute;
+    pointer-events: none;
+}
+
+@keyframes scanline {
+    0% {
+        transform: translateY(-100%);
+    }
+
+    100% {
+        transform: translateY(100%);
+    }
+}
+
+#oscilloscope-canvas-1,
+#oscilloscope-canvas-2 {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100%;
+    height: 100%;
+}
+
+.screen {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background-color: #000;
+    background-image:
+        linear-gradient(rgba(0, 208, 255, 0.1) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 255, 213, 0.1) 1px, transparent 1px);
+    background-size: 40px 40px;
+    overflow: hidden;
+}
+
+.knobs {
+    padding: 1rem;
+    justify-content: center;
+    display: flex;
+    flex-direction: row;
+    gap: 1rem;
+}
+
+input-knob {
+    width: 5rem;
+    height: 5rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 50%;
+    box-shadow: 0 0.3rem 0.3rem rgba(0, 0, 0, 0.5);
+    background: #00cae0;
+}
+
+input-knob::part(rotator) {
+    box-sizing: border-box;
+    width: 5rem;
+    height: 5rem;
+    background: #6333bc;
+    border: 0.3rem double #003258;
+    border-bottom: 0.3rem solid #3f005c;
+    border-radius: 100%;
+}
+
+input-knob.fallback>span.fallback {
+    display: block;
+    box-sizing: border-box;
+}
+
+.mark {
+    display: inline-block;
+    width: 100%;
+    text-align: center;
+    font: bold 200% monospace;
+    color: #fd00a0;
+}

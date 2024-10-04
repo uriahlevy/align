@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Wave Cancellation</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="styleSheet" href="style.css" />
+</head>
+
+<body>
+    <div class="container">
+        <div class="oscilloscope">
+            <div class="screen">
+                <div class="axis x-axis"></div>
+                <div class="axis y-axis"></div>
+                <!-- <div class="measurement x-measurement" style="left: 10px;">-3V</div>
+                <div class="measurement x-measurement" style="left: 50%;">0V</div>
+                <div class="measurement x-measurement" style="right: 10px;">+3V</div>
+                <div class="measurement y-measurement" style="top: 10px;">+2ms</div>
+                <div class="measurement y-measurement" style="top: 50%;">0ms</div>
+                <div class="measurement y-measurement" style="bottom: 10px;">-2ms</div>  -->
+                <div class="glow"></div>
+                <div class="scanline"></div>
+                <canvas id="oscilloscope-canvas-1"></canvas>
+            </div>
+        </div>
+        <div class="operation-module">
+            <div class="oscilloscope-combined">
+                <canvas id="oscilloscope-canvas-2"></canvas>
+                <div class="glow"></div>
+                <div class="scanline"></div>
+            </div>
+            <!-- <div class="knobs">
+                <input-knob id="knob1" value="50" scale="5" min="1" max="100">
+                    <div class="mark">▲</div>
+                </input-knob>
+                <input-knob id="knob2" value="50" scale="5" min="1" max="100">
+                    <div class="mark">▲</div>
+                </input-knob>
+            </div> -->
+            <div class="status-module">
+                <span id="statusDisplay"></span>
+            </div>
+            <div class="keyboard">
+                <div class="key" data-key="a">
+                    <img src="key.png" alt="A">
+                    <span class="key-label">A</span>
+                </div>
+                <div class="key" data-key="d">
+                    <img src="key.png" alt="D">
+                    <span class="key-label">D</span>
+                </div>
+                <div class="key" data-key="j">
+                    <img src="key.png" alt="J">
+                    <span class="key-label">J</span>
+                </div>
+                <div class="key" data-key="l">
+                    <img src="key.png" alt="L">
+                    <span class="key-label">L</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script type="module" src="./script.js"></script>
+    <script type="module" src="./events.js"></script>
+    <script src="https://unpkg.com/input-knob"></script>
+    <script src="./knob.js"></script>
+</body>
+
+</html>
