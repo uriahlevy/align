@@ -10,17 +10,18 @@
 </head>
 
 <body>
+    <canvas id="holographic-background"></canvas>
     <div class="container">
         <div class="oscilloscope">
             <div class="screen">
                 <div class="axis x-axis"></div>
                 <div class="axis y-axis"></div>
-                <!-- <div class="measurement x-measurement" style="left: 10px;">-3V</div>
+                <div class="measurement x-measurement" style="left: 10px;">-3V</div>
                 <div class="measurement x-measurement" style="left: 50%;">0V</div>
-                <div class="measurement x-measurement" style="right: 10px;">+3V</div>
+                <!-- <div class="measurement x-measurement" style="right: 10px;">+3V</div> -->
                 <div class="measurement y-measurement" style="top: 10px;">+2ms</div>
                 <div class="measurement y-measurement" style="top: 50%;">0ms</div>
-                <div class="measurement y-measurement" style="bottom: 10px;">-2ms</div>  -->
+                <div class="measurement y-measurement" style="bottom: 10px;">-2ms</div>
                 <div class="glow"></div>
                 <div class="scanline"></div>
                 <canvas id="oscilloscope-canvas-1"></canvas>
@@ -65,8 +66,21 @@
     </div>
     <script type="module" src="./script.js"></script>
     <script type="module" src="./events.js"></script>
-    <script src="https://unpkg.com/input-knob"></script>
-    <script src="./knob.js"></script>
+    <script type="module" src="./background.js"></script>
+    <!-- <script src="https://unpkg.com/input-knob"></script> -->
+    <!-- <script src="./knob.js"></script> -->
+    <svg style="display: none;">
+        <filter id="turbulence">
+            <feTurbulence type="fractalNoise" baseFrequency="0.01 0.02" numOctaves="3" seed="4" stitchTiles="stitch" />
+            <feDisplacementMap in="SourceGraphic" scale="15" />
+        </filter>
+        <filter id="paper" x="0%" y="0%" width="100%" height="100%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.01" numOctaves="3" />
+            <feDiffuseLighting surfaceScale="1" diffuseConstant="0.1">
+                <feDistantLight azimuth="45" elevation="60" />
+            </feDiffuseLighting>
+        </filter>
+    </svg>
 </body>
 
 </html>

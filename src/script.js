@@ -45,111 +45,197 @@ renderer2.setSize(sizes.width, sizes.height);
 camera1.position.z = 6;
 camera2.position.z = 6;
 
-// Create geometries and materials
-const geometry1 = new THREE.PlaneGeometry(5, 1, 100, 1);
-const material1 = new THREE.MeshBasicMaterial({ color: 0x00ff00, wireframe: true });
-const plane1 = new THREE.Mesh(geometry1, material1);
+// Particle system setup
+const particleCount = 1000; // Adjust for more or fewer particles
+const particles = new Float32Array(particleCount * 3);
+const particleSizes = new Float32Array(particleCount);
 
-const geometry2 = new THREE.PlaneGeometry(5, 1, 100, 1);
-const material2 = new THREE.MeshBasicMaterial({ color: 0xff0000, wireframe: true });
-const plane2 = new THREE.Mesh(geometry2, material2);
+const textureLoader = new THREE.TextureLoader();
+const loader = new THREE.FileLoader();
 
-const geometry3 = new THREE.PlaneGeometry(5, 1, 100, 1);
-const material3 = new THREE.MeshBasicMaterial({ color: 0x0000ff, wireframe: true });
-const plane3 = new THREE.Mesh(geometry3, material3);
-
-plane1.position.y = 1;
-plane2.position.y = -1;
-plane3.position.y = 0;  // Centered in the second canvas
-
-// Add planes to scenes
-scene1.add(plane1);
-scene1.add(plane2);
-scene2.add(plane3);
-
-const statusDisplay = document.getElementById('statusDisplay');
-
-let phaseOffset1 = 0;
-let phaseOffset2 = Math.PI; // Start with π difference for initial cancellation
-let maxAmplitude = 1;
-const phaseStep = 0.05;
-let startTime = Date.now();
-
-function animate() {
-    requestAnimationFrame(animate);
-
-    const currentTime = Date.now();
-    const elapsedTime = (currentTime - startTime) * 0.003;
-
-    updateWave(geometry1, elapsedTime, phaseOffset1, 0.5);
-    updateWave(geometry2, elapsedTime, phaseOffset2, 0.5);
-    const combinedAmplitude = updateCombinedWave(geometry3, geometry1, geometry2);
-
-    const cancellationPercentage = calculateCancellationPercentage(combinedAmplitude);
-    updateStatusDisplay(cancellationPercentage);
-
-    renderer1.render(scene1, camera1);
-    renderer2.render(scene2, camera2);
+// Function to load shader
+function loadShader(url) {
+    return new Promise((resolve, reject) => {
+        loader.load(url, data => resolve(data), null, reject);
+    });
 }
 
-function updateWave(geometry, time, phaseOffset, amplitude) {
-    const positionAttribute = geometry.attributes.position;
-    const vertex = new THREE.Vector3();
+// Load texture and shaders
+Promise.all([
+    new Promise((resolve, reject) => {
+        textureLoader.load('./particle_1.png', resolve, null, reject);
+    }),
+    loadShader('particleVertex.glsl'),
+    loadShader('particleFragment.glsl')
+])
+    .then(([texture, vertexShader, fragmentShader]) => {
+        const particleMaterial1 = new THREE.ShaderMaterial({
+            uniforms: {
+                color: { value: new THREE.Color(0x00d0ff1a) },
+                pointTexture: { value: texture }
+            },
+            vertexShader: vertexShader,
+            fragmentShader: fragmentShader,
+            blending: THREE.AdditiveBlending,
+            depthTest: false,
+            transparent: true
+        });
 
-    for (let i = 0; i < positionAttribute.count; i++) {
-        vertex.fromBufferAttribute(positionAttribute, i);
-        vertex.y = Math.sin(vertex.x * 2 + time + phaseOffset) * amplitude;
-        positionAttribute.setXYZ(i, vertex.x, vertex.y, vertex.z);
-    }
+        const particleMaterial2 = particleMaterial1.clone();
+        particleMaterial2.uniforms.color.value = new THREE.Color(0xff0000);
 
-    positionAttribute.needsUpdate = true;
-}
+        const particleMaterial3 = particleMaterial1.clone();
+        particleMaterial3.uniforms.color.value = new THREE.Color(0x0000ff);
 
-function updateCombinedWave(geometry, geometry1, geometry2) {
-    const positionAttribute = geometry.attributes.position;
-    const positionAttribute1 = geometry1.attributes.position;
-    const positionAttribute2 = geometry2.attributes.position;
-    const vertex = new THREE.Vector3();
-    const vertex1 = new THREE.Vector3();
-    const vertex2 = new THREE.Vector3();
+        // Create particle systems
+        const particleSystem1 = new THREE.Points(new THREE.BufferGeometry(), particleMaterial1);
+        const particleSystem2 = new THREE.Points(new THREE.BufferGeometry(), particleMaterial2);
+        const particleSystem3 = new THREE.Points(new THREE.BufferGeometry(), particleMaterial3);
 
-    let maxAmplitudeThisFrame = 0;
+        particleSystem1.position.y = 1;
+        particleSystem2.position.y = -1;
+        particleSystem3.position.y = 0;
 
-    for (let i = 0; i < positionAttribute.count; i++) {
-        vertex.fromBufferAttribute(positionAttribute, i);
-        vertex1.fromBufferAttribute(positionAttribute1, i);
-        vertex2.fromBufferAttribute(positionAttribute2, i);
-        vertex.y = vertex1.y + vertex2.y;
-        positionAttribute.setXYZ(i, vertex.x, vertex.y, vertex.z);
+        // Initialize particle positions and sizes
+        for (let i = 0; i < particleCount; i++) {
+            const x = (i / particleCount) * 5 - 2.5;
+            particles[i * 3] = x;
+            particles[i * 3 + 1] = 0;
+            particles[i * 3 + 2] = 0;
+            particleSizes[i] = 0.06;
+        }
 
-        maxAmplitudeThisFrame = Math.max(maxAmplitudeThisFrame, Math.abs(vertex.y));
-    }
+        particleSystem1.geometry.setAttribute('position', new THREE.BufferAttribute(particles.slice(), 3));
+        particleSystem2.geometry.setAttribute('position', new THREE.BufferAttribute(particles.slice(), 3));
+        particleSystem3.geometry.setAttribute('position', new THREE.BufferAttribute(particles.slice(), 3));
 
-    positionAttribute.needsUpdate = true;
+        particleSystem1.geometry.setAttribute('size', new THREE.BufferAttribute(particleSizes.slice(), 1));
+        particleSystem2.geometry.setAttribute('size', new THREE.BufferAttribute(particleSizes.slice(), 1));
+        particleSystem3.geometry.setAttribute('size', new THREE.BufferAttribute(particleSizes.slice(), 1));
 
-    // Update the overall max amplitude if necessary
-    maxAmplitude = Math.max(maxAmplitude, maxAmplitudeThisFrame);
+        scene1.add(particleSystem1);
+        scene1.add(particleSystem2);
+        scene2.add(particleSystem3);
 
-    return maxAmplitudeThisFrame;
-}
+        const statusDisplay = document.getElementById('statusDisplay');
 
-function calculateCancellationPercentage(currentAmplitude) {
-    // If maxAmplitude is 0, there's no wave, so we'll consider it 100% cancelled
-    if (maxAmplitude === 0) return 100;
+        let phaseOffset1 = 0;
+        let phaseOffset2 = Math.PI; // Start with π difference for initial cancellation
+        let maxAmplitude = 1;
+        const phaseStep = 0.05;
+        let startTime = Date.now();
 
-    // Calculate the percentage of cancellation
-    const cancellationPercentage = 100 * (1 - currentAmplitude / maxAmplitude);
+        function animate() {
+            requestAnimationFrame(animate);
+            const currentTime = Date.now();
+            const elapsedTime = (currentTime - startTime) * 0.003;
 
-    // Ensure the percentage is between 0 and 100
-    return Math.min(100, Math.max(0, cancellationPercentage));
-}
+            updateParticleWave(particleSystem1, elapsedTime, phaseOffset1, 0.5);
+            updateParticleWave(particleSystem2, elapsedTime, phaseOffset2, 0.5);
+            const combinedAmplitude = updateCombinedParticleWave(particleSystem3, particleSystem1, particleSystem2);
 
-function updateStatusDisplay(percentage) {
-    statusDisplay.textContent = `Phase Cancellation: ${percentage.toFixed(2)}%`;
-}
+            const cancellationPercentage = calculateCancellationPercentage(combinedAmplitude);
+            updateStatusDisplay(cancellationPercentage);
 
-updateStatusDisplay(100);
-animate();
+            renderer1.render(scene1, camera1);
+            renderer2.render(scene2, camera2);
+            if (typeof window.animateBackground === 'function') {
+                window.animateBackground(elapsedTime * 0.2);
+            }
+        }
+
+        function updateParticleWave(particleSystem, time, phaseOffset, amplitude) {
+            const positions = particleSystem.geometry.attributes.position.array;
+
+            for (let i = 0; i < particleCount; i++) {
+                const x = positions[i * 3];
+                const y = Math.sin(x * 2 + time + phaseOffset) * amplitude;
+                positions[i * 3 + 1] = y;
+            }
+
+            particleSystem.geometry.attributes.position.needsUpdate = true;
+        }
+
+        function updateCombinedParticleWave(particleSystem, particleSystem1, particleSystem2) {
+            const positions = particleSystem.geometry.attributes.position.array;
+            const positions1 = particleSystem1.geometry.attributes.position.array;
+            const positions2 = particleSystem2.geometry.attributes.position.array;
+
+            let maxAmplitudeThisFrame = 0;
+
+            for (let i = 0; i < particleCount; i++) {
+                const x = positions1[i * 3];
+                const y = positions1[i * 3 + 1] + positions2[i * 3 + 1];
+                positions[i * 3] = x;
+                positions[i * 3 + 1] = y;
+                positions[i * 3 + 2] = 0;
+
+                maxAmplitudeThisFrame = Math.max(maxAmplitudeThisFrame, Math.abs(y));
+            }
+
+            particleSystem.geometry.attributes.position.needsUpdate = true;
+
+            return maxAmplitudeThisFrame;
+        }
+
+        function calculateCancellationPercentage(currentAmplitude) {
+            if (maxAmplitude === 0) return 100;
+            const cancellationPercentage = 100 * (1 - currentAmplitude / maxAmplitude);
+            let percentage = Math.min(100, Math.max(0, cancellationPercentage));
+            // console.log(percentage);
+            if (percentage < 0.1) {
+                if (!audioPlayed) {
+                    console.log("no cancellation, playing end audio");
+                }
+                playEndAudio();
+            }
+            return percentage;
+        }
+
+        function updateStatusDisplay(percentage) {
+            statusDisplay.textContent = `Phase Cancellation: ${percentage.toFixed(2)}%`;
+        }
+
+        document.addEventListener('keydown', (event) => {
+            const key = document.querySelector(`.key[data-key="${event.key}"]`);
+            if (key) {
+                key.classList.add('pressed');
+                playAudioSample(typingSample)
+                setTimeout(() => {
+                    key.classList.remove('pressed');
+                }, 100);
+            }
+            switch (event.key.toLowerCase()) {
+                case 'a':
+                    phaseOffset1 -= phaseStep;
+                    break;
+                case 'd':
+                    phaseOffset1 += phaseStep;
+                    break;
+                case 'j':
+                    phaseOffset2 -= phaseStep;
+                    break;
+                case 'l':
+                    phaseOffset2 += phaseStep;
+                    break;
+            }
+        });
+
+        updateStatusDisplay(100);
+        startAudio();
+        if (typeof window.initRenderer === 'function') {
+            window.initRenderer();
+        }
+        if (typeof window.initBackgroundScene === 'function') {
+            window.initBackgroundScene();
+        }
+        requestAnimationFrame(animate)
+        animate();
+    })
+    .catch(error => {
+        console.error('An error occurred while loading assets:', error);
+    });
+
 
 window.addEventListener('resize', () => {
     const width = window.innerWidth;
@@ -165,26 +251,78 @@ window.addEventListener('resize', () => {
     camera2.updateProjectionMatrix();
 });
 
-document.addEventListener('keydown', (event) => {
-    const key = document.querySelector(`.key[data-key="${event.key}"]`);
-    if (key) {
-        key.classList.add('pressed');
+let audioContext;
+let audioBuffer;
+let audioSource;
+let audioPlayed = false;
+const typingSample = new Audio('typing_cut.wav')
+
+fetch('gbg_cut.wav')
+    .then(response => response.arrayBuffer())
+    .then(arrayBuffer => {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        return audioContext.decodeAudioData(arrayBuffer);
+    })
+    .then(decodedAudio => {
+        audioBuffer = decodedAudio;
+        console.log('Audio loaded and decoded');
+    })
+    .catch(error => console.error('Error loading audio:', error));
+
+async function startAudio() {
+    if (audioContext && audioContext.state !== 'running') {
+        await audioContext.resume();
+        console.log('Audio context resumed');
+    }
+}
+
+function playEndAudio() {
+    if (!audioPlayed && audioBuffer) {
+        // if (audioSource) {
+        //     audioSource.stop();
+        // }
+        audioSource = audioContext.createBufferSource();
+        audioSource.buffer = audioBuffer;
+
+        const gainNode = audioContext.createGain();
+        // const duration = 2
+        const startTime = 0;
+        const duration = audioBuffer.duration - startTime;
+
         setTimeout(() => {
-            key.classList.remove('pressed');
-        }, 100);
+            const now = audioContext.currentTime;
+            const fadeInDuration = 1.5;
+
+            gainNode.gain.setValueAtTime(0.1, now);
+
+            gainNode.gain.exponentialRampToValueAtTime(1, now + fadeInDuration);
+
+            audioSource.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            audioSource.start(now, startTime, duration);
+
+            let elapsed = 0;
+            const interval = setInterval(() => {
+                console.log(`Gain at ${elapsed / 10}s:`, gainNode.gain.value);
+                elapsed += 1;
+                if (elapsed > fadeInDuration * 10) clearInterval(interval);
+            }, 100);
+        }, 1000);
+
+        audioPlayed = true;
+    } else if (!audioBuffer) {
+        console.log('Audio not yet loaded');
+    } else {
+        console.log('Audio already played');
     }
-    switch (event.key.toLowerCase()) {
-        case 'a':
-            phaseOffset1 -= phaseStep;
-            break;
-        case 'd':
-            phaseOffset1 += phaseStep;
-            break;
-        case 'j':
-            phaseOffset2 -= phaseStep;
-            break;
-        case 'l':
-            phaseOffset2 += phaseStep;
-            break;
+}
+
+function playAudioSample(audio) {
+    if (audio.paused) {
+        audio.currentTime = 0;
+        audio.play();
+    } else {
+        audio.currentTime = 0;
     }
-});
+}
