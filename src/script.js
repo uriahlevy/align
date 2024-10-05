@@ -222,6 +222,7 @@ Promise.all([
         });
 
         updateStatusDisplay(100);
+        continuousGlitchEffect()
         startAudio();
         if (typeof window.initRenderer === 'function') {
             window.initRenderer();
@@ -278,9 +279,6 @@ async function startAudio() {
 
 function playEndAudio() {
     if (!audioPlayed && audioBuffer) {
-        // if (audioSource) {
-        //     audioSource.stop();
-        // }
         audioSource = audioContext.createBufferSource();
         audioSource.buffer = audioBuffer;
 
@@ -308,7 +306,7 @@ function playEndAudio() {
                 elapsed += 1;
                 if (elapsed > fadeInDuration * 10) clearInterval(interval);
             }, 100);
-        }, 1000);
+        }, 200);
 
         audioPlayed = true;
     } else if (!audioBuffer) {
@@ -325,4 +323,45 @@ function playAudioSample(audio) {
     } else {
         audio.currentTime = 0;
     }
+}
+
+function createGlitchOverlay() {
+    const overlay = document.createElement('div');
+    overlay.className = 'glitch-overlay';
+    document.body.appendChild(overlay);
+    return overlay;
+}
+
+function applyGlitchEffect(overlay) {
+    overlay.style.opacity = '1';
+
+    if (Math.random() < 0.8) {
+        console.log('glitching colors');
+        const hue = Math.floor(Math.random() * 360);
+        overlay.style.backgroundColor = `hsl(${hue}, 100%, 80%)`;
+        overlay.style.mixBlendMode = 'difference';
+    } else {
+        overlay.style.backgroundColor = 'black';
+        overlay.style.mixBlendMode = 'overlay';
+    }
+
+    setTimeout(() => {
+        overlay.style.opacity = '0';
+    }, Math.random() * 50 + 20);
+}
+
+function continuousGlitchEffect() {
+    const overlay = createGlitchOverlay();
+    
+    function glitchLoop() {
+        if (Math.random() < 0.8) {
+            console.log('glitching');
+            applyGlitchEffect(overlay);
+        }
+        
+        // Schedule next glitch attempt
+        setTimeout(glitchLoop, Math.random() * 3500 + 100);
+    }
+
+    glitchLoop();
 }
