@@ -36,8 +36,8 @@ const scene1 = new THREE.Scene();
 const scene2 = new THREE.Scene();
 
 // Create two cameras
-const camera1 = new THREE.PerspectiveCamera(45, sizes.width / sizes.height, 0.1, 1000);
-const camera2 = new THREE.PerspectiveCamera(45, sizes.width / sizes.height, 0.1, 1000);
+const camera1 = new THREE.PerspectiveCamera(35, sizes.width / sizes.height, 0.1, 1000);
+const camera2 = new THREE.PerspectiveCamera(35, sizes.width / sizes.height, 0.1, 1000);
 
 renderer1.setSize(sizes.width, sizes.height);
 renderer2.setSize(sizes.width, sizes.height);
@@ -46,7 +46,7 @@ camera1.position.z = 6;
 camera2.position.z = 6;
 
 // Particle system setup
-const particleCount = 1000; // Adjust for more or fewer particles
+const particleCount = 2000; // Adjust for more or fewer particles
 const particles = new Float32Array(particleCount * 3);
 const particleSizes = new Float32Array(particleCount);
 
@@ -69,10 +69,11 @@ Promise.all([
     loadShader('particleFragment.glsl')
 ])
     .then(([texture, vertexShader, fragmentShader]) => {
-        const particleMaterial1 = new THREE.ShaderMaterial({
+        const baseShaderMaterial = new THREE.ShaderMaterial({
             uniforms: {
-                color: { value: new THREE.Color(0x00d0ff1a) },
-                pointTexture: { value: texture }
+                pointTexture: { value: texture },
+                particleColor: { value: new THREE.Color(0x00d0ff) },
+                glowIntensity: { value: 0.2 } 
             },
             vertexShader: vertexShader,
             fragmentShader: fragmentShader,
@@ -80,17 +81,17 @@ Promise.all([
             depthTest: false,
             transparent: true
         });
-
-        const particleMaterial2 = particleMaterial1.clone();
-        particleMaterial2.uniforms.color.value = new THREE.Color(0xff0000);
-
-        const particleMaterial3 = particleMaterial1.clone();
-        particleMaterial3.uniforms.color.value = new THREE.Color(0x0000ff);
-
-        // Create particle systems
-        const particleSystem1 = new THREE.Points(new THREE.BufferGeometry(), particleMaterial1);
-        const particleSystem2 = new THREE.Points(new THREE.BufferGeometry(), particleMaterial2);
-        const particleSystem3 = new THREE.Points(new THREE.BufferGeometry(), particleMaterial3);
+    
+        // Create particle systems with individual colors
+        const particleSystem1 = new THREE.Points(new THREE.BufferGeometry(), baseShaderMaterial.clone());
+        particleSystem1.material.uniforms.particleColor.value = new THREE.Color(0x00d0ff); // Blue
+    
+        const particleSystem2 = new THREE.Points(new THREE.BufferGeometry(), baseShaderMaterial.clone());
+        particleSystem2.material.uniforms.particleColor.value = new THREE.Color(0xff69b4); // Pink
+    
+        const particleSystem3 = new THREE.Points(new THREE.BufferGeometry(), baseShaderMaterial.clone());
+        particleSystem3.material.uniforms.particleColor.value = new THREE.Color(0x8a2be2); // Purple
+        particleSystem3.material.uniforms.glowIntensity.value = 0.5;
 
         particleSystem1.position.y = 1;
         particleSystem2.position.y = -1;
@@ -122,10 +123,13 @@ Promise.all([
         let phaseOffset1 = 0;
         let phaseOffset2 = Math.PI; // Start with π difference for initial cancellation
         let maxAmplitude = 1;
-        const phaseStep = 0.05;
+        const phaseStep = 0.15;
         let startTime = Date.now();
-
+        let isAnimating = false;
         function animate() {
+            if (!isAnimating) {
+                return;
+            }
             requestAnimationFrame(animate);
             const currentTime = Date.now();
             const elapsedTime = (currentTime - startTime) * 0.003;
@@ -140,7 +144,7 @@ Promise.all([
             renderer1.render(scene1, camera1);
             renderer2.render(scene2, camera2);
             if (typeof window.animateBackground === 'function') {
-                window.animateBackground(elapsedTime * 0.2);
+                window.animateBackground(elapsedTime * 0.06);
             }
         }
 
@@ -185,6 +189,7 @@ Promise.all([
             // console.log(percentage);
             if (percentage < 0.1) {
                 if (!audioPlayed) {
+                    continuousGlitchEffect();
                     console.log("no cancellation, playing end audio");
                 }
                 playEndAudio();
@@ -192,11 +197,39 @@ Promise.all([
             return percentage;
         }
 
+        document.getElementById('powerSwitch').addEventListener('change', function () {
+            const scanline = document.querySelector('.scanline');
+            if (this.checked) {
+                startAudio();
+                isAnimating = true;
+                playAudioSample(buzzShort);
+                scanline.classList.add('active');
+                updateStatusDisplay(100);
+                
+                if (typeof window.initRenderer === 'function') {
+                    window.initRenderer();
+                }
+                if (typeof window.initBackgroundScene === 'function') {
+                    window.initBackgroundScene();
+                }
+                requestAnimationFrame(animate)
+                animate();
+            } else {
+                isAnimating = false;
+                scanline.classList.remove('active');
+                stopAudioSample(buzzLong)
+                stopAudioSample(buzzShort)
+                console.log('Power OFF');
+            }
+        });
+
         function updateStatusDisplay(percentage) {
             statusDisplay.textContent = `Phase Cancellation: ${percentage.toFixed(2)}%`;
         }
 
         document.addEventListener('keydown', (event) => {
+            if (!isAnimating) return;
+            playAudioSample(buzzLong);
             const key = document.querySelector(`.key[data-key="${event.key}"]`);
             if (key) {
                 key.classList.add('pressed');
@@ -220,18 +253,6 @@ Promise.all([
                     break;
             }
         });
-
-        updateStatusDisplay(100);
-        continuousGlitchEffect()
-        startAudio();
-        if (typeof window.initRenderer === 'function') {
-            window.initRenderer();
-        }
-        if (typeof window.initBackgroundScene === 'function') {
-            window.initBackgroundScene();
-        }
-        requestAnimationFrame(animate)
-        animate();
     })
     .catch(error => {
         console.error('An error occurred while loading assets:', error);
@@ -240,7 +261,7 @@ Promise.all([
 
 window.addEventListener('resize', () => {
     const width = window.innerWidth;
-    const height = window.innerHeight / 2;  // Half the height for each canvas
+    const height = window.innerHeight / 2; 
 
     renderer1.setSize(width, height);
     renderer2.setSize(width, height);
@@ -257,6 +278,8 @@ let audioBuffer;
 let audioSource;
 let audioPlayed = false;
 const typingSample = new Audio('typing_cut.wav')
+const buzzLong = new Audio('long_buzz.wav')
+const buzzShort = new Audio('short_buzz.wav')
 
 fetch('gbg_cut.wav')
     .then(response => response.arrayBuffer())
@@ -283,13 +306,12 @@ function playEndAudio() {
         audioSource.buffer = audioBuffer;
 
         const gainNode = audioContext.createGain();
-        // const duration = 2
-        const startTime = 0;
+        const startTime = 1;
         const duration = audioBuffer.duration - startTime;
 
         setTimeout(() => {
             const now = audioContext.currentTime;
-            const fadeInDuration = 1.5;
+            const fadeInDuration = 3.5;
 
             gainNode.gain.setValueAtTime(0.1, now);
 
@@ -325,10 +347,24 @@ function playAudioSample(audio) {
     }
 }
 
+function stopAudioSample(audio) {
+    if (audio.play) {
+        audio.pause()
+    }
+}
+
 function createGlitchOverlay() {
     const overlay = document.createElement('div');
     overlay.className = 'glitch-overlay';
-    document.body.appendChild(overlay);
+    
+    const screenElement = document.querySelector('.container');
+    
+    if (screenElement) {
+        screenElement.appendChild(overlay);
+    } else {
+        console.error('Element with class "screen" not found');
+    }
+    
     return overlay;
 }
 
@@ -336,7 +372,6 @@ function applyGlitchEffect(overlay) {
     overlay.style.opacity = '1';
 
     if (Math.random() < 0.8) {
-        console.log('glitching colors');
         const hue = Math.floor(Math.random() * 360);
         overlay.style.backgroundColor = `hsl(${hue}, 100%, 80%)`;
         overlay.style.mixBlendMode = 'difference';
@@ -352,15 +387,14 @@ function applyGlitchEffect(overlay) {
 
 function continuousGlitchEffect() {
     const overlay = createGlitchOverlay();
-    
+
     function glitchLoop() {
         if (Math.random() < 0.8) {
-            console.log('glitching');
             applyGlitchEffect(overlay);
         }
-        
+
         // Schedule next glitch attempt
-        setTimeout(glitchLoop, Math.random() * 3500 + 100);
+        setTimeout(glitchLoop, Math.random() * 1500 + 100);
     }
 
     glitchLoop();

@@ -1,5 +1,5 @@
 body {
-    background-color: hsl(0, 0%, 100%);
+    background-color: hsl(0, 0%, 0%);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -12,12 +12,69 @@ body {
     display: flex;
     flex-direction: row;
     gap: 10px;
+
+    /* Image background */
+    background-image: url('metal_panel_2.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+
+    /* 3D border effect */
+    border: 2px solid #888;
+    outline: 1px solid #444;
+    box-shadow:
+        inset 0 0 0 1px #ccc,
+        inset 0 0 0 2px #aaa,
+        0 0 10px rgba(0,0,0,0.5),
+        inset 0 0 30px rgba(0,0,0,0.3);
+
+    /* Adjusted padding to accommodate the new border */
+    padding: 25px;
+
+    /* Maintain positioning context for child elements */
+    position: relative;
+
+    /* Rounded corners for a softer look */
+    border-radius: 10px;
+
+    /* Add some depth with a gradient overlay */
+    isolation: isolate;
+}
+
+/* Gradient overlay for depth */
+.container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    /* background: linear-gradient(135deg, 
+        rgba(244, 126, 0, 0.773) 0%,
+        rgba(120, 119, 119, 0.471) 50%,
+        rgba(168, 0, 0, 0.499) 100%); */
+    z-index: 1;
+    pointer-events: none;
+    border-radius: 8px;
+}
+
+/* Ensure child elements are above the background effects */
+.container>* {
+    position: relative;
+    z-index: 1;
 }
 
 .keyboard {
     display: flex;
+    flex-direction: column;
     gap: 10px;
-    padding: 20px;
+    padding: 10px;
+}
+
+.key-row {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
 }
 
 .key {
@@ -29,7 +86,6 @@ body {
     cursor: pointer;
     transition: all 0.1s;
     position: relative;
-    /* Add this */
 }
 
 .key img {
@@ -51,24 +107,106 @@ body {
 
 .key.pressed {
     transform: scale(0.85);
-    /* box-shadow: 0 0 5px rgba(0, 0, 0, 0.5); */
+}
+
+.switch-container {
+    margin-top: 1px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-family: 'Courier New', monospace;
+}
+
+.switch-label {
+    color: #ffffff;
+    font-size: 14px;
+    margin-bottom: 5px;
+    letter-spacing: 2px;
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 34px;
+    background-color: #2a2a2a;
+    border: 1px solid #f9f9f9;
+    border-radius: 4px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #114300;
+    transition: .4s;
+}
+
+.toggle:before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: #075d02;
+    transition: .4s;
+}
+
+input:checked + .toggle:before {
+    transform: translateX(26px);
+}
+
+.toggle:after {
+    content: "OFF";
+    position: absolute;
+    top: 50%;
+    left: 8px;
+    transform: translateY(-50%);
+    color: rgb(239, 239, 239);
+    font-size: 12px;
+    font-weight: bold;
+}
+
+input:checked + .toggle:after {
+    content: "ON";
+    left: auto;
+    right: 8px;
+}
+
+
+.switch:before {
+    left: -3px;
+}
+
+.switch:after {
+    right: -3px;
 }
 
 .operation-module {
     display: flex;
-    gap: 50px;
+    gap: 30px;
     flex-direction: column;
     align-items: center;
 }
 
 .status-module {
     width: 400px;
-    height: 20px;
+    height: 40px;
     justify-items: center;
     background-color: #000;
     border: 1px solid #333;
     border-radius: 10px;
-    color: rgb(78, 240, 255);
+    color: #00ffee;
     box-shadow:
         inset 0 0 20px rgba(0, 47, 255, 0.3),
         0 0 10px rgba(0, 47, 255, 0.3);
@@ -81,7 +219,7 @@ body {
 
 .oscilloscope {
     width: 800px;
-    height: 600px;
+    height: 700px;
     background-color: #1a1a1a;
     border: 1px solid #333;
     border-radius: 10px;
@@ -94,7 +232,7 @@ body {
 
 .oscilloscope-combined {
     width: 400px;
-    height: 200px;
+    height: 300px;
     background-color: #1a1a1a;
     border: 1px solid #333;
     border-radius: 10px;
@@ -167,18 +305,22 @@ body {
     height: 100%;
     background: linear-gradient(to bottom,
             rgba(255, 255, 255, 0),
-            rgba(0, 225, 255, 0.1) 50%,
+            rgba(0, 225, 255, 0.185) 80%,
             rgba(255, 255, 255, 0));
-    animation: scanline 5s linear infinite;
     position: absolute;
     pointer-events: none;
+    opacity: 0; 
+}
+
+.scanline.active {
+    animation: scanline 4s linear infinite;
+    opacity: 1; 
 }
 
 @keyframes scanline {
     0% {
         transform: translateY(-100%);
     }
-
     100% {
         transform: translateY(100%);
     }
@@ -263,10 +405,12 @@ body {
     font-family: 'Montserrat', sans-serif;
     font-size: 14px;
     max-width: 300px;
-    width: 90%; /* Responsive width */
+    width: 90%;
+    /* Responsive width */
     box-shadow: 0 0 10px rgba(212, 142, 255, 0.3);
     z-index: 1000;
-    text-align: center; /* Center the text inside */
+    text-align: center;
+    /* Center the text inside */
 }
 
 #webgl-instructions {
@@ -283,10 +427,12 @@ body {
     font-family: 'Montserrat', sans-serif;
     font-size: 14px;
     max-width: 300px;
-    width: 90%; /* Responsive width */
+    width: 90%;
+    /* Responsive width */
     box-shadow: 0 0 10px rgba(212, 142, 255, 0.3);
     z-index: 1000;
-    text-align: center; /* Center the text inside */
+    text-align: center;
+    /* Center the text inside */
     filter: url('#turbulence');
 }
 
@@ -320,7 +466,8 @@ body {
     padding: 4px 8px;
     font-family: 'Orbitron', sans-serif;
     font-size: 11px;
-    width: 60%; /* Reduced width */
+    width: 60%;
+    /* Reduced width */
     color: #fff;
     border: none;
     border-radius: 10px;
@@ -331,8 +478,10 @@ body {
     text-transform: uppercase;
     letter-spacing: 1px;
     font-weight: bold;
-    display: block; /* Ensures the button is a block-level element */
-    margin: 10px auto 0; /* Centers the button and adds some top margin */
+    display: block;
+    /* Ensures the button is a block-level element */
+    margin: 10px auto 0;
+    /* Centers the button and adds some top margin */
 }
 
 
@@ -341,7 +490,7 @@ body {
 }
 
 #holographic-background {
-    position: fixed ;
+    position: fixed;
     top: 0;
     left: 0;
     width: 100%;

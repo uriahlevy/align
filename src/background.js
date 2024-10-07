@@ -42,7 +42,7 @@ const vertexShader = `
         pos.z += wave;
         
         // Add some swirling motion
-        float angle = length(pos.xy) * 0.5 + time * 0.5;
+        float angle = length(pos.xy) * 0.5 + time * 0.1;
         pos.xy += vec2(sin(angle), cos(angle)) * 0.1;
 
         gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
@@ -122,10 +122,6 @@ function showWebGLInstructions() {
     if (instructionsElement) {
         instructionsElement.style.display = 'block';
         const allElements = document.querySelectorAll('.key');
-        // allElements.forEach(element => {
-        //     element.classList.remove('active', 'pressed', 'invisible');
-        //     element.style.opacity = 0;
-        // });
         const container = document.querySelector('.container');
         container.style.opacity = 0;
 
@@ -135,7 +131,7 @@ function showWebGLInstructions() {
 function initBackgroundScene() {
     console.log('animated background init')
     scene = new THREE.Scene();
-    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera = new THREE.PerspectiveCamera(85, window.innerWidth / window.innerHeight, 0.1, 1000);
     camera.position.z = 0.5;
 
     const geometry = new THREE.PlaneGeometry(3, 3, 800, 800);
@@ -157,7 +153,6 @@ function initBackgroundScene() {
 }
 
 function animateBackground(time) {
-    // Use the passed time parameter instead of calculating it here
     if (waveObject && waveObject.material.uniforms) {
         waveObject.material.uniforms.time.value = time;
     }
