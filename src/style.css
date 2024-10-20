@@ -14,13 +14,13 @@ body {
     gap: 10px;
 
     /* Image background */
-    background-image: url('metal_panel_2.jpg');
+    background-image: url('concrete_blue.jpg');
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
 
     /* 3D border effect */
-    border: 2px solid #888;
+    border: 1px solid #888;
     outline: 1px solid #444;
     box-shadow:
         inset 0 0 0 1px #ccc,
@@ -218,7 +218,7 @@ input:checked + .toggle:after {
 }
 
 .oscilloscope {
-    width: 800px;
+    width: 550px;
     height: 700px;
     background-color: #1a1a1a;
     border: 1px solid #333;

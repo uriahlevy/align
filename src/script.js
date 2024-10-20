@@ -144,7 +144,7 @@ Promise.all([
             renderer1.render(scene1, camera1);
             renderer2.render(scene2, camera2);
             if (typeof window.animateBackground === 'function') {
-                window.animateBackground(elapsedTime * 0.06);
+                window.animateBackground(elapsedTime * 0.09);
             }
         }
 
